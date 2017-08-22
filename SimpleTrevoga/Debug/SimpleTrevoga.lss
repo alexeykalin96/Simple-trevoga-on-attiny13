@@ -1,0 +1,354 @@
+
+SimpleTrevoga.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         00000134  00000000  00000000  00000054  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .comment      00000030  00000000  00000000  00000188  2**0
+                  CONTENTS, READONLY
+  2 .debug_aranges 00000030  00000000  00000000  000001b8  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  3 .debug_info   000002a0  00000000  00000000  000001e8  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  4 .debug_abbrev 00000143  00000000  00000000  00000488  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_line   000001d9  00000000  00000000  000005cb  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_frame  00000044  00000000  00000000  000007a4  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_str    000001d8  00000000  00000000  000007e8  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_loc    000002b4  00000000  00000000  000009c0  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_ranges 00000020  00000000  00000000  00000c74  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	09 c0       	rjmp	.+18     	; 0x14 <__ctors_end>
+   2:	0e c0       	rjmp	.+28     	; 0x20 <__bad_interrupt>
+   4:	0d c0       	rjmp	.+26     	; 0x20 <__bad_interrupt>
+   6:	0c c0       	rjmp	.+24     	; 0x20 <__bad_interrupt>
+   8:	0b c0       	rjmp	.+22     	; 0x20 <__bad_interrupt>
+   a:	0a c0       	rjmp	.+20     	; 0x20 <__bad_interrupt>
+   c:	09 c0       	rjmp	.+18     	; 0x20 <__bad_interrupt>
+   e:	08 c0       	rjmp	.+16     	; 0x20 <__bad_interrupt>
+  10:	07 c0       	rjmp	.+14     	; 0x20 <__bad_interrupt>
+  12:	06 c0       	rjmp	.+12     	; 0x20 <__bad_interrupt>
+
+00000014 <__ctors_end>:
+  14:	11 24       	eor	r1, r1
+  16:	1f be       	out	0x3f, r1	; 63
+  18:	cf e9       	ldi	r28, 0x9F	; 159
+  1a:	cd bf       	out	0x3d, r28	; 61
+  1c:	12 d0       	rcall	.+36     	; 0x42 <main>
+  1e:	88 c0       	rjmp	.+272    	; 0x130 <_exit>
+
+00000020 <__bad_interrupt>:
+  20:	ef cf       	rjmp	.-34     	; 0x0 <__vectors>
+
+00000022 <_Z9initPortsv>:
+#define LED_PORT PORTB
+#define LED_OUT 0
+
+void initPorts(void)
+{
+	SOUND_DDR |= (1 << SOUND_OUT);
+  22:	b9 9a       	sbi	0x17, 1	; 23
+	SOUND_PORT &= ~(1 << SOUND_OUT);
+  24:	c1 98       	cbi	0x18, 1	; 24
+	
+	LED_DDR |= (1 << LED_OUT);
+  26:	b8 9a       	sbi	0x17, 0	; 23
+	LED_PORT &= ~(1 << LED_OUT);
+  28:	c0 98       	cbi	0x18, 0	; 24
+	
+	BUTTONS_DDR &= ~((1 << BUTTON_1)|(1 << BUTTON_2));
+  2a:	87 b3       	in	r24, 0x17	; 23
+  2c:	87 7e       	andi	r24, 0xE7	; 231
+  2e:	87 bb       	out	0x17, r24	; 23
+  30:	08 95       	ret
+
+00000032 <_Z7soundOnv>:
+}
+
+void soundOn(void)
+{
+	SOUND_DDR |= (1 << SOUND_OUT); //Sound as output
+  32:	b9 9a       	sbi	0x17, 1	; 23
+	TCCR0A |= (1 << COM0B1)|(1 <<  WGM01)|(1 << WGM00); //Set Fast PWM non-inverting mode
+  34:	8f b5       	in	r24, 0x2f	; 47
+  36:	83 62       	ori	r24, 0x23	; 35
+  38:	8f bd       	out	0x2f, r24	; 47
+	TCCR0B |= (1 << WGM02)|(1 << CS01)|(1 << CS00); //Set prescaler 1024
+  3a:	83 b7       	in	r24, 0x33	; 51
+  3c:	8b 60       	ori	r24, 0x0B	; 11
+  3e:	83 bf       	out	0x33, r24	; 51
+  40:	08 95       	ret
+
+00000042 <main>:
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+  42:	2f eb       	ldi	r18, 0xBF	; 191
+  44:	64 ed       	ldi	r22, 0xD4	; 212
+  46:	81 e0       	ldi	r24, 0x01	; 1
+  48:	21 50       	subi	r18, 0x01	; 1
+  4a:	60 40       	sbci	r22, 0x00	; 0
+  4c:	80 40       	sbci	r24, 0x00	; 0
+  4e:	e1 f7       	brne	.-8      	; 0x48 <main+0x6>
+  50:	00 c0       	rjmp	.+0      	; 0x52 <main+0x10>
+  52:	00 00       	nop
+
+int main(void)
+{
+	_delay_ms(500);
+	
+	initPorts();
+  54:	e6 df       	rcall	.-52     	; 0x22 <_Z9initPortsv>
+	uint8_t counter = 0;
+	uint8_t point = 0;
+	
+    while(trevogaIsPressed == false)
+	{
+		if(((BUTTONS_PIN & (1 << BUTTON_1)) == (0 << BUTTON_1)) || ((BUTTONS_PIN & (1 << BUTTON_2)) == (0 << BUTTON_2)))
+  56:	b3 9b       	sbis	0x16, 3	; 22
+  58:	5d c0       	rjmp	.+186    	; 0x114 <__stack+0x75>
+  5a:	b4 99       	sbic	0x16, 4	; 22
+  5c:	fc cf       	rjmp	.-8      	; 0x56 <main+0x14>
+  5e:	5a c0       	rjmp	.+180    	; 0x114 <__stack+0x75>
+	}
+	
+	soundOn();
+	while(trevogaIsPressed == true)
+	{
+		if(counter < 4)
+  60:	94 30       	cpi	r25, 0x04	; 4
+  62:	90 f5       	brcc	.+100    	; 0xc8 <__stack+0x29>
+		{
+			switch(point)
+  64:	81 30       	cpi	r24, 0x01	; 1
+  66:	59 f0       	breq	.+22     	; 0x7e <main+0x3c>
+  68:	18 f0       	brcs	.+6      	; 0x70 <main+0x2e>
+  6a:	82 30       	cpi	r24, 0x02	; 2
+  6c:	c9 f0       	breq	.+50     	; 0xa0 <__stack+0x1>
+  6e:	f8 cf       	rjmp	.-16     	; 0x60 <main+0x1e>
+			{
+				case 0:
+				SOUND_DDR |= (1 << SOUND_OUT);
+  70:	b9 9a       	sbi	0x17, 1	; 23
+				OCR0A = 30; OCR0B = OCR0A/2;
+  72:	46 bf       	out	0x36, r20	; 54
+  74:	86 b7       	in	r24, 0x36	; 54
+  76:	86 95       	lsr	r24
+  78:	89 bd       	out	0x29, r24	; 41
+				point = 1;
+  7a:	83 2f       	mov	r24, r19
+				break;
+  7c:	f1 cf       	rjmp	.-30     	; 0x60 <main+0x1e>
+				
+				case 1:
+				OCR0A--; OCR0B = OCR0A/2;
+  7e:	66 b7       	in	r22, 0x36	; 54
+  80:	61 50       	subi	r22, 0x01	; 1
+  82:	66 bf       	out	0x36, r22	; 54
+  84:	66 b7       	in	r22, 0x36	; 54
+  86:	66 95       	lsr	r22
+  88:	69 bd       	out	0x29, r22	; 41
+				if(OCR0A < 10)
+  8a:	66 b7       	in	r22, 0x36	; 54
+  8c:	6a 30       	cpi	r22, 0x0A	; 10
+  8e:	08 f4       	brcc	.+2      	; 0x92 <main+0x50>
+				{
+					point = 2;
+  90:	85 2f       	mov	r24, r21
+  92:	e7 eb       	ldi	r30, 0xB7	; 183
+  94:	fb e0       	ldi	r31, 0x0B	; 11
+  96:	31 97       	sbiw	r30, 0x01	; 1
+  98:	f1 f7       	brne	.-4      	; 0x96 <main+0x54>
+  9a:	00 c0       	rjmp	.+0      	; 0x9c <main+0x5a>
+  9c:	00 00       	nop
+  9e:	e0 cf       	rjmp	.-64     	; 0x60 <main+0x1e>
+				}
+				_delay_ms(10);
+				break;
+				
+				case 2:
+				OCR0A++; OCR0B = OCR0A/2;
+  a0:	66 b7       	in	r22, 0x36	; 54
+  a2:	6f 5f       	subi	r22, 0xFF	; 255
+  a4:	66 bf       	out	0x36, r22	; 54
+  a6:	66 b7       	in	r22, 0x36	; 54
+  a8:	66 95       	lsr	r22
+  aa:	69 bd       	out	0x29, r22	; 41
+				LED_PORT |= (1 << LED_OUT);
+  ac:	c0 9a       	sbi	0x18, 0	; 24
+				if(OCR0A > 100)
+  ae:	66 b7       	in	r22, 0x36	; 54
+  b0:	65 36       	cpi	r22, 0x65	; 101
+  b2:	18 f0       	brcs	.+6      	; 0xba <__stack+0x1b>
+				{
+					LED_PORT &= ~(1 << LED_OUT);
+  b4:	c0 98       	cbi	0x18, 0	; 24
+					counter++;
+  b6:	9f 5f       	subi	r25, 0xFF	; 255
+					point = 0;
+  b8:	82 2f       	mov	r24, r18
+  ba:	e7 eb       	ldi	r30, 0xB7	; 183
+  bc:	fb e0       	ldi	r31, 0x0B	; 11
+  be:	31 97       	sbiw	r30, 0x01	; 1
+  c0:	f1 f7       	brne	.-4      	; 0xbe <__stack+0x1f>
+  c2:	00 c0       	rjmp	.+0      	; 0xc4 <__stack+0x25>
+  c4:	00 00       	nop
+  c6:	cc cf       	rjmp	.-104    	; 0x60 <main+0x1e>
+			}
+		}
+			
+		else
+		{
+			switch(point)
+  c8:	81 30       	cpi	r24, 0x01	; 1
+  ca:	51 f0       	breq	.+20     	; 0xe0 <__stack+0x41>
+  cc:	18 f0       	brcs	.+6      	; 0xd4 <__stack+0x35>
+  ce:	82 30       	cpi	r24, 0x02	; 2
+  d0:	51 f1       	breq	.+84     	; 0x126 <__stack+0x87>
+  d2:	c6 cf       	rjmp	.-116    	; 0x60 <main+0x1e>
+			{
+				case 0:
+				OCR0A = 30; OCR0B = OCR0A/2;
+  d4:	46 bf       	out	0x36, r20	; 54
+  d6:	86 b7       	in	r24, 0x36	; 54
+  d8:	86 95       	lsr	r24
+  da:	89 bd       	out	0x29, r24	; 41
+				point = 1;
+  dc:	83 2f       	mov	r24, r19
+				break;
+  de:	c0 cf       	rjmp	.-128    	; 0x60 <main+0x1e>
+			}
+		}
+			
+		else
+		{
+			switch(point)
+  e0:	87 2f       	mov	r24, r23
+				break;
+				
+				case 1:
+				for(uint8_t i = 0; i < 4; i++)
+				{
+					SOUND_DDR |= (1 << SOUND_OUT);
+  e2:	b9 9a       	sbi	0x17, 1	; 23
+					LED_PORT |= (1 << LED_OUT);
+  e4:	c0 9a       	sbi	0x18, 0	; 24
+  e6:	ff eb       	ldi	r31, 0xBF	; 191
+  e8:	64 ed       	ldi	r22, 0xD4	; 212
+  ea:	e1 e0       	ldi	r30, 0x01	; 1
+  ec:	f1 50       	subi	r31, 0x01	; 1
+  ee:	60 40       	sbci	r22, 0x00	; 0
+  f0:	e0 40       	sbci	r30, 0x00	; 0
+  f2:	e1 f7       	brne	.-8      	; 0xec <__stack+0x4d>
+  f4:	00 c0       	rjmp	.+0      	; 0xf6 <__stack+0x57>
+  f6:	00 00       	nop
+					_delay_ms(500);
+					SOUND_DDR &= ~(1 << SOUND_OUT);
+  f8:	b9 98       	cbi	0x17, 1	; 23
+					LED_PORT &= ~(1 << LED_OUT);
+  fa:	c0 98       	cbi	0x18, 0	; 24
+  fc:	ff e3       	ldi	r31, 0x3F	; 63
+  fe:	69 e1       	ldi	r22, 0x19	; 25
+ 100:	e1 e0       	ldi	r30, 0x01	; 1
+ 102:	f1 50       	subi	r31, 0x01	; 1
+ 104:	60 40       	sbci	r22, 0x00	; 0
+ 106:	e0 40       	sbci	r30, 0x00	; 0
+ 108:	e1 f7       	brne	.-8      	; 0x102 <__stack+0x63>
+ 10a:	00 c0       	rjmp	.+0      	; 0x10c <__stack+0x6d>
+ 10c:	00 00       	nop
+ 10e:	81 50       	subi	r24, 0x01	; 1
+				OCR0A = 30; OCR0B = OCR0A/2;
+				point = 1;
+				break;
+				
+				case 1:
+				for(uint8_t i = 0; i < 4; i++)
+ 110:	41 f7       	brne	.-48     	; 0xe2 <__stack+0x43>
+ 112:	0c c0       	rjmp	.+24     	; 0x12c <__stack+0x8d>
+		{
+			trevogaIsPressed = true;
+		}
+	}
+	
+	soundOn();
+ 114:	8e df       	rcall	.-228    	; 0x32 <_Z7soundOnv>
+	
+	initPorts();
+	
+	bool trevogaIsPressed = false;
+	uint8_t counter = 0;
+	uint8_t point = 0;
+ 116:	80 e0       	ldi	r24, 0x00	; 0
+	_delay_ms(500);
+	
+	initPorts();
+	
+	bool trevogaIsPressed = false;
+	uint8_t counter = 0;
+ 118:	90 e0       	ldi	r25, 0x00	; 0
+			}
+		}
+			
+		else
+		{
+			switch(point)
+ 11a:	74 e0       	ldi	r23, 0x04	; 4
+					_delay_ms(500);
+					SOUND_DDR &= ~(1 << SOUND_OUT);
+					LED_PORT &= ~(1 << LED_OUT);
+					_delay_ms(300);
+				}
+				point = 2;
+ 11c:	52 e0       	ldi	r21, 0x02	; 2
+		else
+		{
+			switch(point)
+			{
+				case 0:
+				OCR0A = 30; OCR0B = OCR0A/2;
+ 11e:	4e e1       	ldi	r20, 0x1E	; 30
+				point = 1;
+ 120:	31 e0       	ldi	r19, 0x01	; 1
+				point = 2;
+				break;
+				
+				case 2:
+				counter = 0;
+				point = 0;
+ 122:	20 e0       	ldi	r18, 0x00	; 0
+ 124:	9d cf       	rjmp	.-198    	; 0x60 <main+0x1e>
+ 126:	82 2f       	mov	r24, r18
+				}
+				point = 2;
+				break;
+				
+				case 2:
+				counter = 0;
+ 128:	92 2f       	mov	r25, r18
+ 12a:	9a cf       	rjmp	.-204    	; 0x60 <main+0x1e>
+					_delay_ms(500);
+					SOUND_DDR &= ~(1 << SOUND_OUT);
+					LED_PORT &= ~(1 << LED_OUT);
+					_delay_ms(300);
+				}
+				point = 2;
+ 12c:	85 2f       	mov	r24, r21
+ 12e:	98 cf       	rjmp	.-208    	; 0x60 <main+0x1e>
+
+00000130 <_exit>:
+ 130:	f8 94       	cli
+
+00000132 <__stop_program>:
+ 132:	ff cf       	rjmp	.-2      	; 0x132 <__stop_program>
